@@ -7,11 +7,15 @@ import com.dingtalk.open.app.api.OpenDingTalkStreamClientBuilder;
 import com.dingtalk.open.app.api.message.GenericOpenDingTalkEvent;
 import com.dingtalk.open.app.api.security.AuthClientCredential;
 import com.dingtalk.open.app.stream.protocol.event.EventAckStatus;
+import com.xx.dingtalk.streamsdk.config.annotations.ConditionOnEnableDingTalkStreamSdk;
 import com.xx.dingtalk.streamsdk.config.properties.DingTalkStreamProperties;
 import com.xx.dingtalk.streamsdk.handlers.DingTalkStreamEventHandler;
-import lombok.AllArgsConstructor;
+import com.xx.dingtalk.streamsdk.store.EventStore;
+import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.context.environment.EnvironmentChangeEvent;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,9 +34,9 @@ import java.util.Set;
  */
 @Slf4j
 @Configuration
-@AllArgsConstructor
+@ConditionOnEnableDingTalkStreamSdk
 public class DingTalkStreamAutoConfiguration {
-    private final static List<String> effectiveKeys = Arrays.asList("dingtalk-stream.enable", "dingtalk-stream.appId", "dingtalk-stream.appSecret");
+    private final static List<String> effectiveKeys = Arrays.asList("dingtalk.stream-client.enable", "dingtalk.stream-client.appId", "dingtalk.stream-client.appSecret");
     private final Object lock = new Object();
 
     @EventListener
@@ -42,7 +46,7 @@ public class DingTalkStreamAutoConfiguration {
         if (keyChanged) {
             synchronized (lock) {
                 String beanName = "openDingTalkClient";
-                if (Boolean.parseBoolean(SpringUtil.getProperty("dingtalk-stream.enable"))) {
+                if (Boolean.parseBoolean(SpringUtil.getProperty("dingtalk.stream-client.enable"))) {
                     OpenDingTalkClient bean;
                     try {
                         bean = SpringUtil.getBean(beanName, OpenDingTalkClient.class);
@@ -52,7 +56,7 @@ public class DingTalkStreamAutoConfiguration {
                     } finally {
                         SpringUtil.unregisterBean(beanName);
                     }
-                    DingTalkStreamProperties properties = SpringUtil.getBean(DingTalkStreamProperties.class);
+                    DingTalkStreamProperties properties = dingTalkStreamProperties();
                     DingTalkStreamEventHandler handler = SpringUtil.getBean(DingTalkStreamEventHandler.class);
                     SpringUtil.registerBean(beanName, openDingTalkClient(properties, handler));
                     bean = SpringUtil.getBean(beanName, OpenDingTalkClient.class);
@@ -71,8 +75,14 @@ public class DingTalkStreamAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public DingTalkStreamEventHandler streamEventHandler() {
-        return new DingTalkStreamEventHandler();
+    public DingTalkStreamProperties dingTalkStreamProperties() {
+        return new DingTalkStreamProperties();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public DingTalkStreamEventHandler streamEventHandler(@Nullable EventStore eventStore) {
+        return new DingTalkStreamEventHandler(eventStore);
     }
 
     public OpenDingTalkClient openDingTalkClient(DingTalkStreamProperties properties, DingTalkStreamEventHandler handler) {
@@ -84,7 +94,7 @@ public class DingTalkStreamAutoConfiguration {
                     public EventAckStatus onEvent(GenericOpenDingTalkEvent event) {
                         try {
                             //处理事件
-                            return streamEventHandler().consume(event);
+                            return handler.consume(event);
                         } catch (Exception e) {
                             //消费失败
                             return EventAckStatus.LATER;

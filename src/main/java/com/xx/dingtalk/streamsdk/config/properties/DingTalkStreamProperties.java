@@ -12,8 +12,9 @@ import org.springframework.context.annotation.Configuration;
  */
 @Data
 @Configuration
-@ConfigurationProperties(prefix = "dingtalk-stream")
+@ConfigurationProperties(prefix = "dingtalk.stream-client")
 public class DingTalkStreamProperties {
+
     private Boolean enable = false;
     /**
      * 应用id, 也叫 accessKey
@@ -23,12 +24,4 @@ public class DingTalkStreamProperties {
      * 应用密钥, 也叫 secret_key
      */
     private String appSecret;
-    /**
-     * http 回调 aesKey
-     */
-    private String aesKey;
-    /**
-     * http 回调 token
-     */
-    private String token;
 }

@@ -4,6 +4,7 @@ import cn.hutool.extra.spring.SpringUtil;
 import com.dingtalk.open.app.api.message.GenericOpenDingTalkEvent;
 import com.dingtalk.open.app.stream.protocol.event.EventAckStatus;
 import com.xx.dingtalk.streamsdk.consumers.DingTalkEventConsumer;
+import com.xx.dingtalk.streamsdk.store.EventStore;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.StringUtils;
@@ -25,6 +26,13 @@ public class DingTalkStreamEventHandler implements InitializingBean, AutoCloseab
 
     private final Map<String, DingTalkEventConsumer<?>> consumers = new ConcurrentHashMap<>();
 
+
+    private final EventStore eventStore;
+
+    public DingTalkStreamEventHandler(EventStore eventStore) {
+        this.eventStore = eventStore;
+    }
+
     @Override
     public void afterPropertiesSet() throws Exception {
         Map<String, DingTalkEventConsumer> beansOfType = SpringUtil.getBeansOfType(DingTalkEventConsumer.class);
@@ -44,21 +52,31 @@ public class DingTalkStreamEventHandler implements InitializingBean, AutoCloseab
         String eventType = event.getEventType();
         Long bornTime = event.getEventBornTime();
         JSONObject bizData = event.getData();
-
+        doStoreIfNecessary(event);
         DingTalkEventConsumer<T> consumer = (DingTalkEventConsumer<T>) consumers.get(eventType);
         if (consumer != null) {
             log.info("[Ding Talk Stream] Received DingTalk event notification, eventId: {}, eventType: {}, timestamp: {} \n jsonData : {}", eventId, eventType, bornTime, bizData);
             try {
                 T eventData = convertToEventData(bizData, consumer);
-                consumer.doHandle(eventData);
+                consumer.consume(eventData);
                 return EventAckStatus.SUCCESS;
             } catch (Exception e) {
                 log.error("[Ding Talk Stream] Error handling event: eventId={}, eventType={}", eventId, eventType, e);
                 return EventAckStatus.LATER;
             }
         } else {
-            log.warn("[Ding Talk Stream] No consumer found for eventType: {}", eventType);
+            log.warn("[Ding Talk Stream] No consumer found for eventType: {}, skip the msg...", eventType);
             return EventAckStatus.SUCCESS;
+        }
+    }
+
+    private void doStoreIfNecessary(GenericOpenDingTalkEvent event) {
+        if (eventStore != null) {
+            try {
+                eventStore.save(event);
+            } catch (Exception e) {
+                log.error("[Ding Talk Stream] store msg failed.", e);
+            }
         }
     }
 

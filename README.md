@@ -12,3 +12,4 @@
 1. 引入本项目依赖
 2. 实现接口 [DingTalkEventConsumer.java](src%2Fmain%2Fjava%2Fcom%2Fxx%2Fdingtalk%2Fstreamsdk%2Fconsumers%2FDingTalkEventConsumer.java)
 3. 配置 application.yml 配置文件, 对应的配置类为 [DingTalkStreamProperties.java](src%2Fmain%2Fjava%2Fcom%2Fxx%2Fdingtalk%2Fstreamsdk%2Fconfig%2Fproperties%2FDingTalkStreamProperties.java)
+4. 启动你的项目

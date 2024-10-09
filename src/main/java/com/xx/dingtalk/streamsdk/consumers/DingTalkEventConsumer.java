@@ -10,7 +10,7 @@ package com.xx.dingtalk.streamsdk.consumers;
  */
 public interface DingTalkEventConsumer<T> {
 
-    void doHandle(T eventData);
+    void consume(T eventData);
 
     String getEvent();
 

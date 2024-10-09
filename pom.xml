@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.xx.dingtalk</groupId>
-    <artifactId>stream-sdk</artifactId>
+    <artifactId>dingtalk-stream-sdk</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>stream-sdk</name>
     <description>stream-sdk</description>

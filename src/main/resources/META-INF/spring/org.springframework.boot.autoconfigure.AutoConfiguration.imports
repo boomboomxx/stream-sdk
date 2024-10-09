@@ -1,0 +1,3 @@
+com.xx.dingtalk.streamsdk.cache.local.LocalCacheAutoConfiguration
+com.xx.dingtalk.streamsdk.config.DingTalkStreamAutoConfiguration
+com.xx.dingtalk.streamsdk.config.DefaultEventStoreAutoConfiguration
