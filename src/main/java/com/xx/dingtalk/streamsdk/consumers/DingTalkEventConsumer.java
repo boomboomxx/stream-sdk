@@ -8,11 +8,11 @@ package com.xx.dingtalk.streamsdk.consumers;
  * @author xx
  * @date 2024-08-19
  */
-public interface DingTalkEventConsumer<T> {
+public abstract class DingTalkEventConsumer<T> {
 
-    void consume(T eventData);
+    public abstract void consume(T eventData);
 
-    String getEvent();
+    public abstract String getEvent();
 
 
 }

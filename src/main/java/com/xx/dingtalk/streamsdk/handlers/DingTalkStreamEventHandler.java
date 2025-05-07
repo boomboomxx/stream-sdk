@@ -55,7 +55,9 @@ public class DingTalkStreamEventHandler implements InitializingBean, AutoCloseab
         doStoreIfNecessary(event);
         DingTalkEventConsumer<T> consumer = (DingTalkEventConsumer<T>) consumers.get(eventType);
         if (consumer != null) {
-            log.info("[Ding Talk Stream] Received DingTalk event notification, eventId: {}, eventType: {}, timestamp: {} \n jsonData : {}", eventId, eventType, bornTime, bizData);
+            if (log.isDebugEnabled()) {
+                log.debug("[Ding Talk Stream] Received DingTalk event notification, eventId: {}, eventType: {}, timestamp: {} \n jsonData : {}", eventId, eventType, bornTime, bizData);
+            }
             try {
                 T eventData = convertToEventData(bizData, consumer);
                 consumer.consume(eventData);
